@@ -184,11 +184,11 @@ lazy val sbtRoot: Project = (project in file("."))
     minimalSettings,
     onLoadMessage := {
       val version = sys.props("java.specification.version")
-      """           __    __ 
+      """           __    __
         |     _____/ /_  / /_
         |    / ___/ __ \/ __/
-        |   (__  ) /_/ / /_  
-        |  /____/_.___/\__/ 
+        |   (__  ) /_/ / /_
+        |  /____/_.___/\__/
         |Welcome to the build for sbt.
         |""".stripMargin +
         (if (version != "1.8")
@@ -1562,12 +1562,15 @@ def customCommands: Seq[Setting[_]] = Seq(
   },
 )
 
+val WarwickPublicSnapshots: MavenRepository = "Nexus Public Snapshots" at "https://mvn.elab.warwick.ac.uk/nexus/repository/public-snapshots"
+val WarwickPublicReleases: MavenRepository = "Nexus Public Releases" at "https://mvn.elab.warwick.ac.uk/nexus/repository/public-releases"
+ThisBuild / credentials += Credentials(Path.userHome / ".ivy2" / ".credentials")
 ThisBuild / pomIncludeRepository := { _ =>
   false
 }
 ThisBuild / publishTo := {
-  val nexus = "https://oss.sonatype.org/"
-  Some("releases" at nexus + "service/local/staging/deploy/maven2")
+  if (isSnapshot.value) Some(WarwickPublicSnapshots)
+  else Some(WarwickPublicReleases)
 }
 ThisBuild / publishMavenStyle := true
 ThisBuild / whitesourceProduct := "Lightbend Reactive Platform"
