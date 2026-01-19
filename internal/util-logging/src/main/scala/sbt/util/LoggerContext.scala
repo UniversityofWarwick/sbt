@@ -34,6 +34,9 @@ sealed trait LoggerContext extends AutoCloseable {
   def appenders(loggerName: String): Seq[Appender]
   def remove(name: String): Unit
 }
+
+private class WhyIsThisNecessaryBuilder extends LoggerConfig.Builder[WhyIsThisNecessaryBuilder]
+
 object LoggerContext {
   private[this] val useLog4J = System.getProperty("sbt.log.uselog4j", "false") == "true"
   private[this] lazy val global = new LoggerContext.LoggerContextImpl
@@ -54,18 +57,15 @@ object LoggerContext {
       if (closed.get) {
         throw new IllegalStateException("Tried to create logger for closed LoggerContext")
       }
-      val loggerConfig = LoggerConfig.createLogger(
-        false,
-        XLevel.DEBUG,
-        name,
-        // disable the calculation of caller location as it is very expensive
-        // https://issues.apache.org/jira/browse/LOG4J2-153
-        "false",
-        Array[AppenderRef](),
-        null,
-        config,
-        null
-      )
+      val loggerConfig = LoggerConfig
+        .newBuilder[WhyIsThisNecessaryBuilder]()
+        .withAdditivity(false)
+        .withLevel(XLevel.DEBUG)
+        .withLoggerName(name)
+        .withIncludeLocation("false")
+        .withRefs(Array[AppenderRef]())
+        .withConfig(config)
+        .build()
       config.addLogger(name, loggerConfig)
       val logger = xlc.getLogger(name)
       LogExchange.addConfig(name, loggerConfig)
